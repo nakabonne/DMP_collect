@@ -64,7 +64,7 @@ func openBigtable(tableName string) (table *bigtable.Table, err error) {
 		client, err = bigtable.NewClient(ctx, project, instance)
 	}
 	if err != nil {
-		log.Println("エラー", err)
+		log.Fatal(err)
 	}
 	table = client.Open(tableName)
 	return table, err
@@ -76,7 +76,7 @@ func write(table *bigtable.Table, rowKey string, lat string, lon string) (err er
 	mut.Set(family, "lon", bigtable.Now(), []byte(lon))
 	err = table.Apply(ctx, rowKey, mut)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 	return
 }
@@ -96,15 +96,14 @@ func decode(r io.ReadCloser) (*Info, error) {
 func collect(w http.ResponseWriter, r *http.Request) {
 	info, err := decode(r.Body)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 	fmt.Println(info)
 	rowKey := info.Timestamp + "#" + info.DeviceID
 	table, err := openBigtable("latlon-table")
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
-
 	err = write(table, rowKey, info.Latitude, info.Longitude)
 	if err != nil {
 		log.Fatal(err)
@@ -112,12 +111,13 @@ func collect(w http.ResponseWriter, r *http.Request) {
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("I'm Healthy\n"))
+	w.Write([]byte("I'm Healthy"))
 }
 
 func main() {
 	http.HandleFunc("/collect", collect)
 	http.HandleFunc("/hc", healthCheck)
+	log.Println("start server")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalln(err)
 	}
