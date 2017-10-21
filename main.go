@@ -65,11 +65,11 @@ func openBigtable(tableName string) (table *bigtable.Table, err error) {
 	return table, err
 }
 
-func write(table *bigtable.Table) (err error) {
+func write(table *bigtable.Table, rowKey string, lat string, lon string) (err error) {
 	mut := bigtable.NewMutation()
-	mut.Set(family, "lat", bigtable.Now(), []byte("1"))
-	mut.Set(family, "lon", bigtable.Now(), []byte("2"))
-	err = table.Apply(ctx, "2017102100000000#IDFA2", mut)
+	mut.Set(family, "lat", bigtable.Now(), []byte(lat))
+	mut.Set(family, "lon", bigtable.Now(), []byte(lon))
+	err = table.Apply(ctx, rowKey, mut)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -82,7 +82,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	err = write(table)
+	err = write(table, "2017102100000000#IDFA2", "1", "2")
 	if err != nil {
 		log.Fatal(err)
 	}
