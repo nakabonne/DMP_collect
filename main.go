@@ -114,7 +114,7 @@ func collect(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/collect", collect)
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":80", nil); err != nil {
 		log.Fatalln(err)
 	}
 }
