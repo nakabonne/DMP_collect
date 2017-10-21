@@ -104,10 +104,12 @@ func collect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("open table")
 	err = write(table, rowKey, info.Latitude, info.Longitude)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("write table")
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
