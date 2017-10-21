@@ -22,6 +22,14 @@ var (
 	ctx = context.Background()
 )
 
+type Info struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	DeviceID  string  `json:"device_id"`
+	SysName   string  `json:"sysname"`
+	SysVer    string  `json:"sysver"`
+}
+
 func authenticate() *bigtable.Client {
 	pathToKeyFile := "ca-intern-201710-team02-4d5815ebcb43.json"
 	jsonKey, err := ioutil.ReadFile(pathToKeyFile)
@@ -39,20 +47,26 @@ func authenticate() *bigtable.Client {
 	return client
 }
 
+func isDevelop() bool {
+	return os.Getenv("DEV") == "1"
+}
+
 func main() {
-	if os.Getenv("DEV") == "1" {
-		client := authenticate()
-		table := client.Open("latlon-table")
-		fmt.Println(table)
+	var client *bigtable.Client
+	var err error
+	if isDevelop() {
+		client = authenticate()
 	} else {
-		adminClient, err := bigtable.NewAdminClient(ctx, project, instance)
+		client, err = bigtable.NewClient(ctx, project, instance)
 		if err != nil {
 			log.Fatalln("エラー", err)
 		}
-		tables, err := adminClient.Tables(ctx)
-		if err != nil {
-			log.Fatalln("エラー", err)
-		}
-		log.Println(tables)
 	}
+	table := client.Open("latlon-table")
+	fmt.Println(table)
+
+	mut := bigtable.NewMutation()
+	mut.Set("links", "maps.google.com", bigtable.Now(), []byte("1"))
+	mut.Set("links", "golang.org", bigtable.Now(), []byte("1"))
+	err = table.Apply(ctx, "com.google.cloud", mut)
 }
