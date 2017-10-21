@@ -33,6 +33,7 @@ type Info struct {
 	DeviceID  string `json:"device_id"`
 	SysName   string `json:"sysname"`
 	SysVer    string `json:"sysver"`
+	Timestamp string `json:"timestamp"`
 }
 
 func authenticate() (*bigtable.Client, error) {
@@ -98,13 +99,13 @@ func collect(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	fmt.Println(info)
-
+	rowKey := info.Timestamp + "#" + info.DeviceID
 	table, err := openBigtable("latlon-table")
 	if err != nil {
 		log.Println(err)
 	}
 
-	err = write(table, "2017102100000000#IDFA3", "1", "2")
+	err = write(table, rowKey, info.Latitude, info.Longitude)
 	if err != nil {
 		log.Fatal(err)
 	}
