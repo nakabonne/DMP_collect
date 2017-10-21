@@ -1,8 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 
 	"google.golang.org/api/option"
@@ -59,7 +63,7 @@ func openBigtable(tableName string) (table *bigtable.Table, err error) {
 		client, err = bigtable.NewClient(ctx, project, instance)
 	}
 	if err != nil {
-		log.Fatalln("エラー", err)
+		log.Println("エラー", err)
 	}
 	table = client.Open(tableName)
 	return table, err
@@ -71,19 +75,45 @@ func write(table *bigtable.Table, rowKey string, lat string, lon string) (err er
 	mut.Set(family, "lon", bigtable.Now(), []byte(lon))
 	err = table.Apply(ctx, rowKey, mut)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	return
 }
 
-func main() {
+func decode(r io.ReadCloser) (*Info, error) {
+	bytes, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	info := new(Info)                                    // デコード後に格納する箱
+	if err := json.Unmarshal(bytes, &info); err != nil { // デコードする
+		return nil, err
+	}
+	return info, nil
+}
+
+func collect(w http.ResponseWriter, r *http.Request) {
+	info, err := decode(r.Body)
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println(info)
+
 	table, err := openBigtable("latlon-table")
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 
-	err = write(table, "2017102100000000#IDFA2", "1", "2")
+	err = write(table, "2017102100000000#IDFA3", "1", "2")
 	if err != nil {
 		log.Fatal(err)
+	}
+
+}
+
+func main() {
+	http.HandleFunc("/collect", collect)
+	if err := http.ListenAndServe(":80", nil); err != nil {
+		log.Fatalln(err)
 	}
 }
