@@ -109,12 +109,16 @@ func collect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("I'm Healthy\n"))
 }
 
 func main() {
 	http.HandleFunc("/collect", collect)
-	if err := http.ListenAndServe(":80", nil); err != nil {
+	http.HandleFunc("/hc", healthCheck)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalln(err)
 	}
 }
