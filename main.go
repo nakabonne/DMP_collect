@@ -28,11 +28,11 @@ var (
 )
 
 type Info struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	DeviceID  string  `json:"device_id"`
-	SysName   string  `json:"sysname"`
-	SysVer    string  `json:"sysver"`
+	Latitude  string `json:"latitude"`
+	Longitude string `json:"longitude"`
+	DeviceID  string `json:"device_id"`
+	SysName   string `json:"sysname"`
+	SysVer    string `json:"sysver"`
 }
 
 func authenticate() (*bigtable.Client, error) {
@@ -85,8 +85,8 @@ func decode(r io.ReadCloser) (*Info, error) {
 	if err != nil {
 		return nil, err
 	}
-	info := new(Info)                                    // デコード後に格納する箱
-	if err := json.Unmarshal(bytes, &info); err != nil { // デコードする
+	info := new(Info)
+	if err := json.Unmarshal(bytes, &info); err != nil {
 		return nil, err
 	}
 	return info, nil
@@ -113,7 +113,7 @@ func collect(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/collect", collect)
-	if err := http.ListenAndServe(":80", nil); err != nil {
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalln(err)
 	}
 }
