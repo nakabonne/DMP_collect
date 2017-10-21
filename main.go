@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,8 +13,10 @@ import (
 )
 
 const (
-	project  = "ca-intern-201710-team02"
-	instance = "teamb-bigtable1"
+	project       = "ca-intern-201710-team02"
+	instance      = "teamb-bigtable1"
+	pathToKeyFile = "ca-intern-201710-team02-4d5815ebcb43.json"
+	family        = "Log"
 )
 
 var (
@@ -30,43 +31,59 @@ type Info struct {
 	SysVer    string  `json:"sysver"`
 }
 
-func authenticate() *bigtable.Client {
-	pathToKeyFile := "ca-intern-201710-team02-4d5815ebcb43.json"
+func authenticate() (*bigtable.Client, error) {
 	jsonKey, err := ioutil.ReadFile(pathToKeyFile)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 	config, err := google.JWTConfigFromJSON(jsonKey, bigtable.Scope)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 	client, err := bigtable.NewClient(ctx, project, instance, option.WithTokenSource(config.TokenSource(ctx)))
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
-	return client
+	return client, nil
 }
 
 func isDevelop() bool {
 	return os.Getenv("DEV") == "1"
 }
 
-func main() {
+func openBigtable(tableName string) (table *bigtable.Table, err error) {
 	var client *bigtable.Client
-	var err error
 	if isDevelop() {
-		client = authenticate()
+		client, err = authenticate()
 	} else {
 		client, err = bigtable.NewClient(ctx, project, instance)
-		if err != nil {
-			log.Fatalln("エラー", err)
-		}
 	}
-	table := client.Open("latlon-table")
-	fmt.Println(table)
+	if err != nil {
+		log.Fatalln("エラー", err)
+	}
+	table = client.Open(tableName)
+	return table, err
+}
 
+func write(table *bigtable.Table) (err error) {
 	mut := bigtable.NewMutation()
-	mut.Set("links", "maps.google.com", bigtable.Now(), []byte("1"))
-	mut.Set("links", "golang.org", bigtable.Now(), []byte("1"))
-	err = table.Apply(ctx, "com.google.cloud", mut)
+	mut.Set(family, "lat", bigtable.Now(), []byte("1"))
+	mut.Set(family, "lon", bigtable.Now(), []byte("2"))
+	err = table.Apply(ctx, "2017102100000000#IDFA2", mut)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return
+}
+
+func main() {
+	table, err := openBigtable("latlon-table")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = write(table)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
