@@ -119,7 +119,8 @@ func collect(w http.ResponseWriter, r *http.Request) {
 
 func writeLog(info Info) {
 	logger := logClient.Logger(logName)
-	logger.Log(logging.Entry{Payload: fmt.Sprintf("%v", info)})
+	logText := fmt.Sprintf("%v", info)
+	logger.Log(logging.Entry{Payload: logText})
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
