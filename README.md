@@ -1,3 +1,11 @@
+# team_b_collection
+
+このAPIは以下のタスクを行います
+
+- 位置情報ログを受け取る
+- CloudBigtableへの書き込み
+- Stack driver loggingへログを渡す
+
 # How to test writing
 
 ```
