@@ -97,6 +97,7 @@ func decode(r io.ReadCloser) (*Info, error) {
 }
 
 func collect(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	info, err := decode(r.Body)
 	if err != nil {
 		log.Fatal(err)
