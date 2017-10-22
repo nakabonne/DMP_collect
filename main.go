@@ -135,6 +135,7 @@ func writeLog(info Info) {
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	w.Write([]byte("I'm Healthy"))
 }
 
