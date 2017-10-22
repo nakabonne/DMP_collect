@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -24,7 +23,8 @@ const (
 )
 
 var (
-	ctx = context.Background()
+	ctx   = context.Background()
+	table *bigtable.Table
 )
 
 type Info struct {
@@ -56,7 +56,7 @@ func isDevelop() bool {
 	return os.Getenv("DEV") == "1"
 }
 
-func openBigtable(tableName string) (table *bigtable.Table, err error) {
+func openBigtable(tableName string) (tbl *bigtable.Table, err error) {
 	var client *bigtable.Client
 	if isDevelop() {
 		client, err = authenticate()
@@ -66,15 +66,15 @@ func openBigtable(tableName string) (table *bigtable.Table, err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	table = client.Open(tableName)
-	return table, err
+	tbl = client.Open(tableName)
+	return
 }
 
-func write(table *bigtable.Table, rowKey string, lat string, lon string) (err error) {
+func write(tbl *bigtable.Table, rowKey string, lat string, lon string) (err error) {
 	mut := bigtable.NewMutation()
 	mut.Set(family, "lat", bigtable.Now(), []byte(lat))
 	mut.Set(family, "lon", bigtable.Now(), []byte(lon))
-	err = table.Apply(ctx, rowKey, mut)
+	err = tbl.Apply(ctx, rowKey, mut)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,29 +98,37 @@ func collect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(info)
 	rowKey := info.Timestamp + "#" + info.DeviceID
-	table, err := openBigtable("latlon-table")
+	if table == nil {
+		table, err = openBigtable("latlon-table")
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("open table")
+
 	err = write(table, rowKey, info.Latitude, info.Longitude)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("write table")
+
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("I'm Healthy"))
 }
 
+func init() {
+	var err error
+	table, err = openBigtable("latlon-table")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	http.HandleFunc("/collect", collect)
 	http.HandleFunc("/hc", healthCheck)
-	log.Println("start server")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 }
