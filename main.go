@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"os"
 
-	"google.golang.org/api/option"
-
 	"cloud.google.com/go/bigtable"
+	"cloud.google.com/go/logging"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 )
 
 const (
@@ -20,11 +20,13 @@ const (
 	instance      = "teamb-bigtable1"
 	pathToKeyFile = "ca-intern-201710-team02-4d5815ebcb43.json"
 	family        = "Log"
+	logName       = "collect-log"
 )
 
 var (
-	ctx   = context.Background()
-	table *bigtable.Table
+	ctx       = context.Background()
+	table     *bigtable.Table
+	logClient *logging.Client
 )
 
 type Info struct {
@@ -90,10 +92,12 @@ func decode(r io.ReadCloser) (*Info, error) {
 	if err := json.Unmarshal(bytes, &info); err != nil {
 		return nil, err
 	}
+	writeLog(*info)
 	return info, nil
 }
 
 func collect(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	info, err := decode(r.Body)
 	if err != nil {
 		log.Fatal(err)
@@ -113,13 +117,36 @@ func collect(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func writeLog(info Info) {
+	logger := logClient.Logger(logName)
+	// mapJSON := map[string]interface{}{
+	// 	"lat":       info.Latitude,
+	// 	"lon":       info.Longitude,
+	// 	"timestamp": info.Timestamp,
+	// 	"idfa":      info.DeviceID,
+	// 	"sysname":   info.SysName,
+	// 	"sysver":    info.SysVer,
+	// }
+	//logJSON, err := json.Marshal(info)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	logger.Log(logging.Entry{Payload: info})
+}
+
 func healthCheck(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	w.Write([]byte("I'm Healthy"))
 }
 
 func init() {
 	var err error
 	table, err = openBigtable("latlon-table")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	logClient, err = logging.NewClient(ctx, project)
 	if err != nil {
 		log.Fatal(err)
 	}
