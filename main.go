@@ -90,6 +90,7 @@ func decode(r io.ReadCloser) (*Info, error) {
 	if err := json.Unmarshal(bytes, &info); err != nil {
 		return nil, err
 	}
+	log.Println(info)
 	return info, nil
 }
 
