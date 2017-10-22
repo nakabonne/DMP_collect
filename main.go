@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -119,8 +118,19 @@ func collect(w http.ResponseWriter, r *http.Request) {
 
 func writeLog(info Info) {
 	logger := logClient.Logger(logName)
-	logText := fmt.Sprintf("%v", info)
-	logger.Log(logging.Entry{Payload: logText})
+	mapJSON := map[string]interface{}{
+		"lat":       info.Latitude,
+		"lon":       info.Longitude,
+		"timestamp": info.Timestamp,
+		"idfa":      info.DeviceID,
+		"sysname":   info.SysName,
+		"sysver":    info.SysVer,
+	}
+	logJSON, err := json.Marshal(mapJSON)
+	if err != nil {
+		log.Println(err)
+	}
+	logger.Log(logging.Entry{Payload: logJSON})
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
