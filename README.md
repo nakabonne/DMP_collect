@@ -23,3 +23,9 @@ $ go run main.go
 
 $ curl -i -X POST -H "Content-Type: application/json" http://localhost:8080/collect -d @sample_data.json;
 ```
+
+# Digression
+
+当初は以下のアーキテクチャの予定だったが時間なかった
+
+![result](https://github.com/ryonakao/DMP_collect/blob/master/media/architectureA.png)
