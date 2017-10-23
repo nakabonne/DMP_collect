@@ -7,7 +7,7 @@
 上記アーキテクチャの"CollectAPI"の部分。
 AnswerAPIは→https://github.com/ryonakao/DMP_answer
 
-このAPIは以下のタスクを行います
+## Tasks
 
 - 位置情報ログを受け取る
 - CloudBigtableへの書き込み
