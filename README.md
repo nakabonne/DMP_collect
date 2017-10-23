@@ -1,5 +1,11 @@
 # team_b_collection
 
+## Architecture
+
+![result](https://github.com/ryonakao/DMP_collect/blob/master/media/ArchitectureB.png)
+
+上記アーキテクチャの"CollectAPI"の部分。
+
 このAPIは以下のタスクを行います
 
 - 位置情報ログを受け取る
