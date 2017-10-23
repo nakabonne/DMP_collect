@@ -5,6 +5,7 @@
 ![result](https://github.com/ryonakao/DMP_collect/blob/master/media/ArchitectureB.png)
 
 上記アーキテクチャの"CollectAPI"の部分。
+AnswerAPIは→https://github.com/ryonakao/DMP_answer
 
 このAPIは以下のタスクを行います
 
@@ -26,6 +27,6 @@ $ curl -i -X POST -H "Content-Type: application/json" http://localhost:8080/coll
 
 # Digression
 
-当初は以下のアーキテクチャの予定だったが時間なかった
+当初は以下のようにジョブキューを噛ませる予定だったが、2000QPSなら使わなくても耐えることができた。
 
 ![result](https://github.com/ryonakao/DMP_collect/blob/master/media/architectureA.png)
