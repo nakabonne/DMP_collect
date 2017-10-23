@@ -1,4 +1,4 @@
-# team_b_collection
+# DMP_collect
 
 ## Architecture
 
