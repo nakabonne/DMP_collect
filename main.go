@@ -119,18 +119,6 @@ func collect(w http.ResponseWriter, r *http.Request) {
 
 func writeLog(info Info) {
 	logger := logClient.Logger(logName)
-	// mapJSON := map[string]interface{}{
-	// 	"lat":       info.Latitude,
-	// 	"lon":       info.Longitude,
-	// 	"timestamp": info.Timestamp,
-	// 	"idfa":      info.DeviceID,
-	// 	"sysname":   info.SysName,
-	// 	"sysver":    info.SysVer,
-	// }
-	//logJSON, err := json.Marshal(info)
-	// if err != nil {
-	// 	log.Println(err)
-	// }
 	logger.Log(logging.Entry{Payload: info})
 }
 
